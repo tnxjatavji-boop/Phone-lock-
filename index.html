@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Access</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #0f1115;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #e6e8eb;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: none;
+    overscroll-behavior: none;
+  }
+
+  #gate {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #0f1115;
+    z-index: 2147483647;
+    padding: 20px;
+  }
+
+  .logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #4f7cff, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 28px;
+    box-shadow: 0 8px 24px rgba(79, 124, 255, 0.25);
+  }
+
+  .logo svg { width: 26px; height: 26px; fill: #fff; }
+
+  h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    margin-bottom: 8px;
+    color: #f2f4f7;
+  }
+
+  p.sub {
+    font-size: 14px;
+    color: #8b93a1;
+    margin-bottom: 32px;
+    text-align: center;
+    max-width: 320px;
+    line-height: 1.5;
+  }
+
+  .field {
+    width: 100%;
+    max-width: 340px;
+    position: relative;
+    margin-bottom: 12px;
+  }
+
+  input {
+    width: 100%;
+    background: #1a1d24;
+    border: 1px solid #2a2f3a;
+    border-radius: 12px;
+    color: #f2f4f7;
+    font-size: 15px;
+    font-family: inherit;
+    padding: 14px 16px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  input::placeholder { color: #5a6273; }
+
+  input:focus {
+    border-color: #4f7cff;
+    box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.15);
+  }
+
+  input.wrong {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    animation: shake 0.3s;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  button {
+    width: 100%;
+    max-width: 340px;
+    background: #4f7cff;
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 14px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+  }
+
+  button:hover { background: #3d68e8; }
+  button:active { transform: scale(0.985); }
+
+  .msg {
+    margin-top: 18px;
+    font-size: 13px;
+    color: #ef4444;
+    min-height: 18px;
+    text-align: center;
+  }
+
+  .msg.ok { color: #22c55e; }
+
+  #app {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: #0f1115;
+    flex-direction: column;
+    color: #f2f4f7;
+    font-size: 18px;
+    font-weight: 500;
+  }
+
+  #app .tick {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(34, 197, 94, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  #app .tick svg {
+    width: 32px;
+    height: 32px;
+    stroke: #22c55e;
+    stroke-width: 3;
+    fill: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="logo">
+    <svg viewBox="0 0 24 24"><path d="M12 1a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-9a2 2 0 0 0-2-2h-1V6a5 5 0 0 0-5-5zm0 2a3 3 0 0 1 3 3v3H9V6a3 3 0 0 1 3-3zm0 11a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>
+  </div>
+  <h1>Enter access key</h1>
+  <p class="sub">This screen is locked. Provide the key to continue.</p>
+
+  <div class="field">
+    <input type="password" id="key" placeholder="Access key" autocomplete="off" spellcheck="false" autofocus>
+  </div>
+  <button onclick="verify()">Continue</button>
+
+  <div class="msg" id="msg"></div>
+</div>
+
+<div id="app">
+  <div class="tick">
+    <svg viewBox="0 0 24 24"><polyline points="4,12 10,18 20,6"/></svg>
+  </div>
+  Access granted
+</div>
+
+<script>
+  const SECRET = "RAHULPAPAJI";
+  let unlocked = false;
+
+  // ===== KILL ALL INTERACTION =====
+  const kill = e => {
+    if (unlocked) return;
+    if (e.target && e.target.id === 'key') return; // allow typing
+    if (e.target && e.target.tagName === 'BUTTON') return; // allow button
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    return false;
+  };
+
+  ['contextmenu','dragstart','drop','copy','cut','paste','selectstart',
+   'mousedown','mouseup','mousemove','pointerdown','pointerup',
+   'touchstart','touchmove','touchend','gesturestart','gesturechange',
+   'wheel','scroll','click','dblclick','auxclick'].forEach(evt => {
+    document.addEventListener(evt, kill, { capture: true, passive: false });
+  });
+
+  // ===== KEYBOARD LOCKDOWN =====
+  document.addEventListener('keydown', function(e) {
+    if (unlocked) return;
+
+    // allow typing + enter in input
+    if (e.target.id === 'key') {
+      if (e.key === 'Enter') { verify(); }
+      return;
+    }
+
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    return false;
+  }, true);
+
+  document.addEventListener('keyup', function(e) {
+    if (unlocked) return;
+    if (e.target.id === 'key') return;
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }, true);
+
+  document.addEventListener('keypress', function(e) {
+    if (unlocked) return;
+    if (e.target.id === 'key') return;
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }, true);
+
+  // ===== HISTORY / BACK TRAP =====
+  history.pushState(null, null, location.href);
+  window.addEventListener('popstate', function() {
+    if (!unlocked) {
+      history.pushState(null, null, location.href);
+    }
+  });
+
+  // push extra states so browser back has to eat many
+  for (let i = 0; i < 10; i++) {
+    history.pushState(null, null, location.href);
+  }
+
+  // ===== CLOSE / REFRESH TRAP =====
+  window.addEventListener('beforeunload', function(e) {
+    if (!unlocked) {
+      e.preventDefault();
+      e.returnValue = 'Locked.';
+      return 'Locked.';
+    }
+  });
+
+  // ===== FOCUS TRAP =====
+  window.addEventListener('blur', function() {
+    if (!unlocked) {
+      setTimeout(() => document.getElementById('key').focus(), 10);
+    }
+  });
+
+  setInterval(function() {
+    if (unlocked) return;
+    const inp = document.getElementById('key');
+    if (document.activeElement !== inp) inp.focus();
+  }, 300);
+
+  // ===== BLUR BACKGROUND PAGES =====
+  document.addEventListener('visibilitychange', function() {
+    if (unlocked) return;
+    if (document.hidden) {
+      // tab switched — no action possible anyway
+    }
+  });
+
+  // ===== VERIFY =====
+  function verify() {
+    const inp = document.getElementById('key');
+    const msg = document.getElementById('msg');
+
+    if (inp.value.trim() === SECRET) {
+      unlocked = true;
+      msg.textContent = 'Unlocking...';
+      msg.className = 'msg ok';
+      setTimeout(function() {
+        document.getElementById('gate').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+      }, 500);
+    } else {
+      msg.textContent = 'Incorrect key. Try again.';
+      msg.className = 'msg';
+      inp.value = '';
+      inp.classList.add('wrong');
+      setTimeout(() => inp.classList.remove('wrong'), 350);
+      inp.focus();
+    }
+  }
+
+  document.getElementById('key').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') verify();
+  });
+</script>
+
+</body>
+</html>
